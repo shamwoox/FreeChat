@@ -45,6 +45,11 @@
         display: none;
     }
 
+    #chatbox {
+        height: 500px;
+        overflow-y: scroll;
+    }
+
 </style>
 <body>
     <div class="container">
@@ -125,6 +130,7 @@
                                 </div>
                             </li>`;
                 $('#chatbox').append(html);
+                $('#chatbox').scrollTop($('#chatbox')[0].scrollHeight);
             });
 
             $('#user-form').submit(function(e) {
