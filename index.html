@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <title>Free Chat</title>
+</head>
+<style>
+
+    .container {
+        margin-top: 30px;
+    }
+    
+    .message-container {
+        margin-top: 30px;
+    }
+
+    #enter {
+        margin-top: 10px;
+    }
+
+    #message {
+        margin-right: 10px;
+    }
+
+    .chatbox {
+        border: 1px solid;
+        border-radius: 10px;
+    }
+
+    .user-init {
+        width: 30%;
+        border: 1px solid lightgrey;
+        border-radius: 20px;
+        padding: 20px;
+    }
+
+    .init-container {
+        text-align: center;
+    }
+
+    .main {
+        display: none;
+    }
+
+</style>
+<body>
+    <div class="container">
+
+        <div class="user-init">
+            <form action="" id="user-form">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" class="form-control" id="username" placeholder="Enter a username" required>
+                    <button class="btn btn-primary btn-sm" id="enter">Enter</button>
+                </div>
+            </form>
+        </div>
+
+
+        <div class="main">
+            <div class="row">
+                <div class="col-md-9">
+                    <ul class="list-group list-group-flush" id="chatbox">
+                    </ul>
+                </div>
+                <div class="col-md-3 online-users">
+                    <h3>Online Users</h3>
+                    <ul class="list-group" id="users">
+                    </ul>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <form action="" id="message-form">
+                        <div class="input-group message-container">
+                            <input type="text" class="form-control" id="message">
+                            <button type="submit" class="btn btn-primary" id="send">Send</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const onlineUsers = $('#users');
+
+        $(function () {
+            $("form message").keypress(function (e) {
+                if ((e.which && e.which == 13) || (e.keyCode && e.keyCode == 13)) {
+                    $('button[type=submit].default').click();
+                    return false;
+                } else {
+                    return true;
+                }
+            });
+            const socket = io();
+            $('#message-form').submit(function(e){
+                e.preventDefault(); // prevents page reloading
+                socket.emit('chat message', $('#message').val());
+                $('#message').val('');
+                return false;
+            });
+            socket.on('chat message', function(data){
+                const today = new Date();
+                const date = today.getFullYear() + '/' + (today.getMonth() + 1) + '/' + today.getDate();
+                const time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+                const dateTime = date + ' ' + time;
+                const html = `<li class="list-group-item">
+                                <strong>${data.user}: </strong>
+                                ${data.msg}
+                                <div>
+                                    <h6>
+                                        <small>
+                                            ${dateTime}
+                                        </small>
+                                    </h6>
+                                </div>
+                            </li>`;
+                $('#chatbox').append(html);
+            });
+
+            $('#user-form').submit(function(e) {
+                e.preventDefault();
+                $('.user-init').hide();
+                $('.main').show();
+                socket.emit('user login', $('#username').val());
+                return false;
+            });
+
+            socket.on('user login', function(data) {
+                let onlineUsers = '';
+                for (let i = 0; i < data.users.length; i++) {
+                    onlineUsers += `<li class="list-group-item"> ${data.users[i]}</li>`;
+                }
+                $('#users').html(onlineUsers);
+            });
+        });
+    </script>
+</body>
+</html>
